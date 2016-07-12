@@ -17,6 +17,9 @@
 package br.com.cit.lab.servlet;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServlet;
@@ -34,6 +37,9 @@ import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
+import com.google.appengine.api.memcache.ErrorHandlers;
+import com.google.appengine.api.memcache.MemcacheService;
+import com.google.appengine.api.memcache.MemcacheServiceFactory;
 
 public class ListarTelefone extends HttpServlet {
 
@@ -50,31 +56,52 @@ public class ListarTelefone extends HttpServlet {
 
 		StringBuffer buffer = new StringBuffer();
 		buffer.append("<html><head><title>Lista Client e Usuario</title><style>table, th, td {border: 1px solid black;}</style></head><body><table><tr><td>Client</td><td>Phone</td></tr>");
+
+	    MemcacheService syncCache = MemcacheServiceFactory.getMemcacheService();
+	    syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
+	    @SuppressWarnings("unchecked")
+		List<Client> list = (List<Client>)syncCache.get(Constantes.KEY_CLIENTS);
 		
-		DatastoreService datastore = DatastoreServiceFactory
-				.getDatastoreService();
-		Query queryUsuario = new Query(Client.class.getSimpleName());
-		PreparedQuery resul = datastore.prepare(queryUsuario);
-		
-		if (resul != null) {
-			for (Entity usuarioEntity: resul.asIterable()) {
-				Object fieldName = usuarioEntity.getProperty(Constantes.NAME);
-				Key phoneRef = ((Key)usuarioEntity.getProperty(Constantes.PHONE));
-				
-				try {
-					Entity phoneEntity = datastore.get(phoneRef);
-					Client client = new Client(fieldName.toString(), new Phone((String)phoneEntity.getProperty(Constantes.PHONE)));
-					buffer.append("<tr><td>"+client.getName()+"</td><td>"+client.getTelefone().getPhone()+"</td></tr>");
-				} catch (EntityNotFoundException e1) {
-					e1.printStackTrace();
+	    if(list!=null && list.size()>0){
+			log.info("Use Caching!");
+			for (Client client : list) {
+				print(buffer, client);
+			}
+		}else{
+			log.info("Not Use Caching!");
+			list = new ArrayList<Client>();
+			DatastoreService datastore = DatastoreServiceFactory
+					.getDatastoreService();
+			Query queryUsuario = new Query(Client.class.getSimpleName());
+			PreparedQuery resul = datastore.prepare(queryUsuario);
+			
+			if (resul != null) {
+				for (Entity usuarioEntity: resul.asIterable()) {
+					Object fieldName = usuarioEntity.getProperty(Constantes.NAME);
+					Key phoneRef = ((Key)usuarioEntity.getProperty(Constantes.PHONE));
+					
+					try {
+						Entity phoneEntity = datastore.get(phoneRef);
+						Client client = new Client(fieldName.toString(), new Phone((String)phoneEntity.getProperty(Constantes.PHONE)));
+						list.add(client);
+						print(buffer, client);
+					} catch (EntityNotFoundException e1) {
+						e1.printStackTrace();
+					}
 				}
+				syncCache.put(Constantes.KEY_CLIENTS, list);
 			}
 		}
+
 		buffer.append("</table></body></html>");
 		log.info("List User`s and Telefone");
 
 		response.setContentType("text/html");
 		response.getWriter().print(buffer.toString());
 
+	}
+
+	private void print(StringBuffer buffer, Client client) {
+		buffer.append("<tr><td>"+client.getName()+"</td><td>"+client.getTelefone().getPhone()+"</td></tr>");
 	}
 }

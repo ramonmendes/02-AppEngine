@@ -17,6 +17,9 @@
 package br.com.cit.lab.servlet;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
@@ -24,14 +27,16 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import br.com.cit.lab.constant.Constantes;
 import br.com.cit.lab.model.Client;
 import br.com.cit.lab.model.Phone;
 
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
-
-import br.com.cit.lab.constant.Constantes;
+import com.google.appengine.api.memcache.ErrorHandlers;
+import com.google.appengine.api.memcache.MemcacheService;
+import com.google.appengine.api.memcache.MemcacheServiceFactory;
 
 public class IncluirTelefone extends HttpServlet {
 
@@ -46,7 +51,19 @@ public class IncluirTelefone extends HttpServlet {
 			throws IOException, ServletException {
 	    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
-		log.info("Create User and Telefone");
+	    MemcacheService syncCache = MemcacheServiceFactory.getMemcacheService();
+	    syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
+	    @SuppressWarnings("unchecked")
+		List<Client> list = (List<Client>)syncCache.get(Constantes.KEY_CLIENTS);
+		
+	    if(list==null){
+			list = new ArrayList<Client>();
+			log.info("Not Use Caching!");
+		}else{
+			log.info("Use Caching!");
+		}
+			
+	    log.info("Create User and Telefone");
 		
 		String name = request.getParameter(Constantes.NAME);
 		String numberPhone = request.getParameter(Constantes.PHONE);
@@ -59,6 +76,9 @@ public class IncluirTelefone extends HttpServlet {
 		clientEntity.setProperty(Constantes.NAME, name);
 		clientEntity.setProperty(Constantes.PHONE, phoneEntity.getKey());
 		datastore.put(clientEntity);
+		
+		list.add(new Client(name, new Phone(numberPhone)));
+		syncCache.put(Constantes.KEY_CLIENTS, list);
 		
 		response.setContentType("text/plain");
 	    request.getRequestDispatcher("/app/telefone/listar").forward(request, response);

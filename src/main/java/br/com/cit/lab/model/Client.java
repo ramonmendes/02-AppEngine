@@ -1,6 +1,12 @@
 package br.com.cit.lab.model;
 
-public class Client {
+import java.io.Serializable;
+
+public class Client implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -4594303360059562246L;
 	private String name;
 	private Phone telefone;
 

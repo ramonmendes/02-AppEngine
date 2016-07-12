@@ -1,6 +1,12 @@
 package br.com.cit.lab.model;
 
-public class Phone {
+import java.io.Serializable;
+
+public class Phone implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -1161846803496573440L;
 	private String phone;
 
 	public String getPhone() {
