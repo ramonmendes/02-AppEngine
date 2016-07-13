@@ -40,6 +40,9 @@ import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.memcache.ErrorHandlers;
 import com.google.appengine.api.memcache.MemcacheService;
 import com.google.appengine.api.memcache.MemcacheServiceFactory;
+import com.google.appengine.api.taskqueue.Queue;
+import com.google.appengine.api.taskqueue.QueueFactory;
+import com.google.appengine.api.taskqueue.TaskOptions;
 
 public class ListarTelefone extends HttpServlet {
 
@@ -62,6 +65,9 @@ public class ListarTelefone extends HttpServlet {
 	    @SuppressWarnings("unchecked")
 		List<Client> list = (List<Client>)syncCache.get(Constantes.KEY_CLIENTS);
 		
+		Queue queue = QueueFactory.getDefaultQueue();
+		queue.add(TaskOptions.Builder.withUrl(Constantes.QUEUE).param(Constantes.TYPE, "Consulta"));
+
 	    if(list!=null && list.size()>0){
 			log.info("Use Caching!");
 			for (Client client : list) {

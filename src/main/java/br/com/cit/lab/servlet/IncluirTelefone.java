@@ -37,6 +37,9 @@ import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.memcache.ErrorHandlers;
 import com.google.appengine.api.memcache.MemcacheService;
 import com.google.appengine.api.memcache.MemcacheServiceFactory;
+import com.google.appengine.api.taskqueue.Queue;
+import com.google.appengine.api.taskqueue.QueueFactory;
+import com.google.appengine.api.taskqueue.TaskOptions;
 
 public class IncluirTelefone extends HttpServlet {
 
@@ -67,6 +70,10 @@ public class IncluirTelefone extends HttpServlet {
 		
 		String name = request.getParameter(Constantes.NAME);
 		String numberPhone = request.getParameter(Constantes.PHONE);
+		
+		//Task queue
+		Queue queue = QueueFactory.getDefaultQueue();
+		queue.add(TaskOptions.Builder.withUrl(Constantes.QUEUE).param(Constantes.TYPE, "Incluir"));
 		
 		Entity phoneEntity = new Entity(Phone.class.getSimpleName());
 		phoneEntity.setProperty(Constantes.PHONE, numberPhone);

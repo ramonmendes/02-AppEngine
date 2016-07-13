@@ -11,6 +11,10 @@
 		<servlet-name>IncluirTelefone</servlet-name>
 		<servlet-class>br.com.cit.lab.servlet.IncluirTelefone</servlet-class>
 	</servlet>
+	<servlet>
+		<servlet-name>LogAppsServlet</servlet-name>
+		<servlet-class>br.com.cit.lab.servlet.LogAppsServlet</servlet-class>
+	</servlet>
 	<servlet-mapping>
 		<servlet-name>IncluirTelefone</servlet-name>
 		<url-pattern>/app/telefone/incluir</url-pattern>
@@ -18,6 +22,10 @@
 	<servlet-mapping>
 		<servlet-name>ListarTelefone</servlet-name>
 		<url-pattern>/app/telefone/listar</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>LogAppsServlet</servlet-name>
+		<url-pattern>/queue/log</url-pattern>
 	</servlet-mapping>
 	<welcome-file-list>
 		<welcome-file>index.html</welcome-file>

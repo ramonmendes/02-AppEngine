@@ -1,0 +1,7 @@
+br/com/cit/lab/model/Phone.class
+br/com/cit/lab/constant/Constantes.class
+br/com/cit/lab/servlet/ListarTelefone.class
+br/com/cit/lab/model/Client.class
+br/com/cit/lab/model/LogDataApp.class
+br/com/cit/lab/servlet/LogAppsServlet.class
+br/com/cit/lab/servlet/IncluirTelefone.class
